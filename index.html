@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaStream | 1080p60 Ultra-Low-Latency WebRTC Streamer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="env-config.js" onerror="this.remove()"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h15a3 3 0 003-3v-9a3 3 0 00-3-3h-15zM20 7.5v9a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 012 16.5v-9A1.5 1.5 0 013.5 6h15a1.5 1.5 0 011.5 1.5z'/><path d='M10 8.5l6 3.5-6 3.5v-7z'/></svg>">
+</head>
+<body>
+
+  <!-- Liquid Glass Fluid Background Orbs -->
+  <div class="liquid-bg" aria-hidden="true">
+    <div class="liquid-orb orb-1"></div>
+    <div class="liquid-orb orb-2"></div>
+    <div class="liquid-orb orb-3"></div>
+    <div class="liquid-orb orb-4"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Top Navigation Bar (Visible in Studio & Viewer) -->
+    <header id="app-navbar" class="navbar" style="display: none;">
+      <div class="brand" onclick="window.location.search = ''">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
+            <path d="M10 8.5v5l4-2.5-4-2.5z" fill="#fff"/>
+            <path d="M2 19h20v2H2v-2z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>NovaStream</h1>
+          <span class="badge-sub">4K &bull; 1080p 60fps &bull; Zero Latency</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Unauthenticated Button -->
+        <button id="btn-login-header" class="btn btn-google btn-sm">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Sign in
+        </button>
+
+        <!-- Authenticated Profile -->
+        <div id="user-profile" class="user-profile" style="display: none;">
+          <img id="user-avatar" class="user-avatar" src="" alt="User Avatar">
+          <span id="user-name" class="user-name">User</span>
+          <button id="btn-logout" class="btn-ghost btn-sm" title="Sign Out">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- VIEW 1: LOBBY (3 VERTICAL LIQUID GLASS CARDS) -->
+    <main id="lobby-view" class="view-section active">
+      <div class="lobby-stack">
+
+        <!-- CARD 1: WEBSITE LOGO, NAME & SIGN-IN -->
+        <section class="card card-brand-auth">
+          <div class="brand-auth-header">
+            <div class="brand-auth-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
+                <path d="M10 8.5v5l4-2.5-4-2.5z" fill="#fff"/>
+                <path d="M2 19h20v2H2v-2z"/>
+              </svg>
+            </div>
+            <div class="brand-auth-content">
+              <div class="brand-auth-title-row">
+                <h1 class="brand-auth-name">NovaStream</h1>
+                <span class="badge-sub">4K &bull; 1080p 60fps &bull; Zero Latency</span>
+              </div>
+              <p class="brand-auth-desc">Ultra-low-latency peer-to-peer streaming with end-to-end encrypted chat and two-way voice.</p>
+            </div>
+          </div>
+
+          <!-- Signed Out State (Card 1) -->
+          <div id="card-auth-logged-out" class="card-auth-body">
+            <button id="btn-login-hero" class="btn btn-google btn-lg" type="button" style="width: 100%;">
+              <svg width="22" height="22" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              Sign in with Google
+            </button>
+            <div class="feature-badges" style="margin-top: 1.25rem;">
+              <div class="feat-item"><span class="feat-dot"></span> Native 4K &amp; 1080p 60 FPS</div>
+              <div class="feat-item"><span class="feat-dot"></span> Zero Buffer Delay (&lt; 30ms)</div>
+              <div class="feat-item"><span class="feat-dot"></span> 🔒 E2EE Encrypted Chat</div>
+              <div class="feat-item"><span class="feat-dot"></span> 🎙️ Two-Way Voice</div>
+            </div>
+          </div>
+
+          <!-- Signed In State (Card 1) -->
+          <div id="card-auth-logged-in" class="card-auth-body" style="display: none;">
+            <div class="user-card-profile">
+              <div class="user-card-avatar-wrap">
+                <img id="card-user-avatar" class="user-card-avatar" src="" alt="User Avatar">
+                <span class="user-card-status-dot online"></span>
+              </div>
+              <div class="user-card-info">
+                <div class="user-card-name-row">
+                  <span id="card-user-name" class="user-card-name">User</span>
+                  <span class="badge badge-emerald">Signed In</span>
+                </div>
+                <span id="card-user-email" class="user-card-email">user@gmail.com</span>
+              </div>
+              <button id="btn-card-logout" class="btn btn-ghost btn-sm" type="button">Sign out</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 2: BROADCAST FROM THIS DEVICE -->
+        <section class="card card-broadcast">
+          <div class="card-header-row">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 7l-7 5 7 5V7z"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </div>
+            <div class="card-title-group">
+              <h2 class="card-title">Broadcast From This Device</h2>
+              <p class="card-desc">Share any game, window, or monitor at maximum 4K or 1080p 60 FPS quality with high-bitrate Opus audio.</p>
+            </div>
+          </div>
+
+          <form id="stream-options-form" onsubmit="return false;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="opt-resolution">Resolution</label>
+                <select id="opt-resolution" class="form-select">
+                  <option value="4k">4K Ultra HD (3840x2160) - 60 FPS</option>
+                  <option value="1440p">1440p 2K (2560x1440) - 60 FPS</option>
+                  <option value="1080p" selected>1080p Full HD (1920x1080) - 60 FPS</option>
+                  <option value="720p">720p HD (1280x720) - 60 FPS</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="opt-framerate">Frame Rate</label>
+                <select id="opt-framerate" class="form-select">
+                  <option value="60" selected>60 FPS (Ultra Smooth)</option>
+                  <option value="30">30 FPS (Standard)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="opt-bitrate">Video Bitrate</label>
+              <select id="opt-bitrate" class="form-select">
+                <option value="40">40 Mbps (4K 60FPS Ultra Quality)</option>
+                <option value="25">25 Mbps (4K 60FPS Recommended)</option>
+                <option value="18">18 Mbps (1440p / 4K Balanced)</option>
+                <option value="12">12 Mbps (1080p60 High Quality)</option>
+                <option value="10" selected>10 Mbps (Recommended for 1080p60)</option>
+                <option value="8">8 Mbps (Standard High Speed)</option>
+                <option value="5">5 Mbps (Standard Network)</option>
+              </select>
+              <div class="hint-text">Enforces WebRTC sender bitrate without downscaling.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="opt-include-mic">
+                <span>Mix Microphone commentary into stream</span>
+              </label>
+            </div>
+
+            <button type="button" id="btn-start-stream" class="btn btn-primary" style="width: 100%;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="8"/>
+              </svg>
+              Start 4K / 60FPS Stream
+            </button>
+          </form>
+        </section>
+
+        <!-- CARD 3: WATCH A STREAM -->
+        <section class="card card-join">
+          <div class="card-header-row">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            <div class="card-title-group">
+              <h2 class="card-title">Watch a Stream</h2>
+              <p class="card-desc">Enter the 6-character room code shared by your friend to watch in real-time.</p>
+            </div>
+          </div>
+
+          <form id="join-room-form">
+            <div class="form-group">
+              <label class="form-label" for="input-room-code">Room Code</label>
+              <input type="text" id="input-room-code" class="form-input" placeholder="e.g. ABC123" maxlength="10" required autocomplete="off" style="text-transform: uppercase; letter-spacing: 0.1em; font-family: monospace; font-size: 1.15rem;">
+              <div class="hint-text">Or click on an invite link sent by the streamer.</div>
+            </div>
+
+            <button type="submit" id="btn-join-stream" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              Join Stream
+            </button>
+          </form>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- VIEW 2: STREAMER STUDIO -->
+    <main id="studio-view" class="view-section">
+      <div class="studio-layout">
+        <!-- Main Video Monitor -->
+        <div>
+          <div class="video-stage">
+            <video id="studio-video" class="main-video" autoplay muted playsinline></video>
+            
+            <!-- Hidden audio element to receive & play viewer voice in real time -->
+            <audio id="streamer-voice-audio" autoplay></audio>
+
+            <div class="stage-live-badge">
+              <span class="live-dot"></span>
+              LIVE ON AIR
+            </div>
+
+            <div class="stage-stats-badge">
+              <span id="studio-metric-res">4K / 1080p</span> &bull;
+              <span id="studio-metric-fps">60 FPS</span>
+            </div>
+
+            <!-- Streamer Quick Video Toolbar -->
+            <div class="video-toolbar">
+              <!-- Streamer Microphone Mute Toggle -->
+              <button id="btn-streamer-mic" class="btn-icon mic-unmuted" title="Mute / Unmute Your Microphone">
+                <svg id="streamer-mic-on-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                <svg id="streamer-mic-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                  <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+                  <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+
+              <!-- Streamer Fullscreen -->
+              <button id="btn-studio-fullscreen" class="btn-icon" title="Fullscreen Monitor">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Studio Side Panel with Tabs (Live Chat & Studio Controls) -->
+        <aside class="side-panel">
+          <div class="panel-tabs">
+            <button id="btn-studio-tab-chat" class="panel-tab active" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Live Chat
+              <span id="studio-chat-unread" class="tab-unread-dot" style="display: none;"></span>
+            </button>
+            <button id="btn-studio-tab-info" class="panel-tab" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              Controls &amp; Info
+            </button>
+          </div>
+
+          <!-- TAB PANE 1: LIVE CHAT -->
+          <div id="studio-pane-chat" class="tab-pane active">
+            <div class="chat-box">
+              <div class="chat-header">
+                <span class="chat-header-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Stream Chat
+                </span>
+                <span style="font-size: 0.72rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;" title="End-to-End Encrypted with AES-GCM 256">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  E2EE
+                </span>
+              </div>
+              
+              <div id="studio-chat-messages" class="chat-messages">
+                <div class="chat-empty-state">Welcome to the stream! Say hello to your viewers.</div>
+              </div>
+
+              <form id="studio-chat-form" class="chat-form">
+                <input type="text" id="studio-chat-input" class="chat-input" placeholder="Send a message as Host..." maxlength="300" autocomplete="off" required>
+                <button type="submit" class="chat-send-btn" title="Send Message">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- TAB PANE 2: CONTROLS & INFO -->
+          <div id="studio-pane-info" class="tab-pane">
+            <div class="panel-box">
+              <div class="panel-title">Share Your Stream</div>
+              <div class="room-code-box">
+                <span id="studio-room-code" class="room-code-text">------</span>
+                <button id="btn-copy-room-code" class="btn-ghost btn-sm" title="Copy Room Code">Copy Code</button>
+              </div>
+              <button id="btn-copy-share-link" class="btn btn-primary btn-sm" style="width: 100%;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Copy 1-Click Invite Link
+              </button>
+            </div>
+
+            <!-- Connected Viewer Status with Voice Indicator -->
+            <div class="panel-box">
+              <div class="panel-title">Audience &amp; Voice</div>
+              <div id="studio-viewer-status" class="hint-text" style="margin-bottom: 0.75rem;">Waiting for viewer to connect...</div>
+              
+              <div id="studio-viewer-card" class="viewer-card" style="display: none;">
+                <img id="studio-viewer-avatar" class="user-avatar" src="" alt="Viewer Avatar">
+                <div class="viewer-info">
+                  <span id="studio-viewer-name" class="viewer-name">Viewer Name</span>
+                  <span id="studio-viewer-email" class="viewer-email">viewer@gmail.com</span>
+                  <div id="viewer-voice-badge" class="voice-badge">
+                    <span class="live-dot" style="background: #10b981;"></span>
+                    <span>Voice Chat Connected</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Telemetry HUD -->
+            <div class="panel-box">
+              <div class="panel-title">Performance Telemetry</div>
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Framerate</div>
+                  <div id="studio-metric-fps" class="metric-value good">60 FPS</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Bitrate</div>
+                  <div id="studio-metric-bitrate" class="metric-value highlight">25.0 Mbps</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Latency / Ping</div>
+                  <div id="studio-metric-rtt" class="metric-value">&lt; 15 ms</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Resolution</div>
+                  <div id="studio-metric-res" class="metric-value">3840x2160</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- End Stream -->
+            <button id="btn-stop-stream" class="btn btn-danger" style="width: 100%;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+              End Stream
+            </button>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- VIEW 3: VIEWER THEATER -->
+    <main id="viewer-view" class="view-section">
+      <div class="studio-layout">
+        <!-- Main Video Player -->
+        <div>
+          <div id="viewer-stage" class="video-stage">
+            <video id="viewer-video" class="main-video" autoplay playsinline muted></video>
+
+            <!-- Non-intrusive floating unmute pill (only appears if browser blocks audio autoplay, never hides video) -->
+            <div id="unmute-banner" class="unmute-overlay" style="display: none;" title="Click anywhere on the stream to unmute">
+              <div class="unmute-pill-content">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <line x1="23" y1="9" x2="17" y2="15"/>
+                  <line x1="17" y1="9" x2="23" y2="15"/>
+                </svg>
+                <span>Sound Muted (Browser Autoplay)</span>
+                <button type="button" id="btn-unmute-stream" class="btn btn-primary btn-xs">Unmute Stream</button>
+              </div>
+            </div>
+
+            <!-- Live Status & Stats Badge -->
+            <div class="stage-live-badge">
+              <span class="live-dot"></span>
+              LIVE P2P
+            </div>
+
+            <div class="stage-stats-badge">
+              <span id="viewer-metric-res">1080p</span> &bull;
+              <span id="viewer-metric-fps">60 FPS</span>
+            </div>
+
+            <!-- Viewer Floating Controls -->
+            <div class="video-toolbar">
+              <!-- Viewer Microphone Mute / Unmute (Two-Way Voice Chat) -->
+              <button id="btn-viewer-mic" class="btn-icon mic-unmuted" title="Mute / Unmute Your Microphone (Voice Chat with Streamer)">
+                <svg id="viewer-mic-on-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                <svg id="viewer-mic-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                  <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+                  <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+
+              <!-- Volume -->
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+                <input id="volume-slider" type="range" min="0" max="1" step="0.05" value="1" style="width: 80px; accent-color: var(--accent-primary);">
+              </div>
+
+              <!-- Screen Rotation (0°, 90°, 180°, 270°) -->
+              <button id="btn-rotate-stream" class="btn-icon" title="Rotate Stream (Portrait / Landscape)" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                  <polyline points="21 3 21 8 16 8"/>
+                </svg>
+              </button>
+
+              <!-- Picture in Picture -->
+              <button id="btn-pip" class="btn-icon" title="Picture in Picture" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <rect x="12" y="10" width="8" height="8" rx="1"/>
+                </svg>
+              </button>
+
+              <!-- Fullscreen -->
+              <button id="btn-fullscreen" class="btn-icon" title="Fullscreen" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              </button>
+
+              <!-- Disconnect -->
+              <button id="btn-leave-stream" class="btn-icon danger" title="Leave Stream" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                  <line x1="12" y1="2" x2="12" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viewer Side Panel with Tabs (Live Chat & Stream Info) -->
+        <aside class="side-panel">
+          <div class="panel-tabs">
+            <button id="btn-viewer-tab-chat" class="panel-tab active" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Live Chat
+              <span id="viewer-chat-unread" class="tab-unread-dot" style="display: none;"></span>
+            </button>
+            <button id="btn-viewer-tab-info" class="panel-tab" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              Stream Info
+            </button>
+          </div>
+
+          <!-- TAB PANE 1: VIEWER LIVE CHAT -->
+          <div id="viewer-pane-chat" class="tab-pane active">
+            <div class="chat-box">
+              <div class="chat-header">
+                <span class="chat-header-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Stream Chat
+                </span>
+                <span style="font-size: 0.72rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;" title="End-to-End Encrypted with AES-GCM 256">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  E2EE
+                </span>
+              </div>
+              
+              <div id="viewer-chat-messages" class="chat-messages">
+                <div class="chat-empty-state">Welcome to the stream! Chat with the streamer and audience.</div>
+              </div>
+
+              <form id="viewer-chat-form" class="chat-form">
+                <input type="text" id="viewer-chat-input" class="chat-input" placeholder="Send a message..." maxlength="300" autocomplete="off" required>
+                <button type="submit" class="chat-send-btn" title="Send Message">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- TAB PANE 2: VIEWER STREAM INFO -->
+          <div id="viewer-pane-info" class="tab-pane">
+            <div class="panel-box">
+              <div class="panel-title">Stream Broadcaster</div>
+              <div class="viewer-card">
+                <img id="viewer-host-avatar" class="user-avatar" src="" alt="Host Avatar">
+                <div class="viewer-info">
+                  <span id="viewer-host-name" class="viewer-name">Streamer</span>
+                  <span class="viewer-email">Broadcasting with WebRTC</span>
+                  <div class="voice-badge">
+                    <span class="live-dot" style="background: #10b981;"></span>
+                    <span>Two-Way Voice Enabled</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Real-Time Metrics -->
+            <div class="panel-box">
+              <div class="panel-title">Live Quality Metrics</div>
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Frame Rate</div>
+                  <div id="viewer-metric-fps" class="metric-value good">60 FPS</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Bitrate</div>
+                  <div id="viewer-metric-bitrate" class="metric-value highlight">0.0 Mbps</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Latency / RTT</div>
+                  <div id="viewer-metric-rtt" class="metric-value">&lt; 15 ms</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Resolution</div>
+                  <div id="viewer-metric-res" class="metric-value">1920x1080</div>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="document.getElementById('btn-leave-stream').click();" class="btn btn-secondary" style="width: 100%;">
+              Exit Stream
+            </button>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Load Main Application Script as ES Module -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,15 @@
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+
+# Auto-generated runtime config
+env-config.js
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
